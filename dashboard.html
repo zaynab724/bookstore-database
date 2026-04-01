@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Librairie Ifrane — Bookstore Management System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0f0e0c;
+    --surface:   #1a1815;
+    --card:      #221f1b;
+    --border:    #2e2a25;
+    --accent:    #c9a84c;
+    --accent2:   #8b5e3c;
+    --text:      #e8e0d0;
+    --muted:     #7a7060;
+    --danger:    #c0392b;
+    --success:   #2e7d5e;
+    --pending:   #b8860b;
+    --shipped:   #2980b9;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    position: fixed; top: 0; left: 0;
+    width: 240px; height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 0;
+    z-index: 100;
+  }
+
+  .sidebar-brand {
+    padding: 28px 24px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-brand h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    line-height: 1.3;
+  }
+
+  .sidebar-brand p {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .nav { flex: 1; padding: 16px 0; }
+
+  .nav-section {
+    padding: 8px 24px 4px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 24px;
+    font-size: 13.5px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 2px solid transparent;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--card); }
+
+  .nav-item.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    background: rgba(201,168,76,0.07);
+  }
+
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+  /* ── Main ── */
+  .main {
+    margin-left: 240px;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    height: 60px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 32px;
+    justify-content: space-between;
+    background: var(--surface);
+    position: sticky; top: 0; z-index: 50;
+  }
+
+  .topbar-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+
+  .badge {
+    background: var(--accent);
+    color: var(--bg);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+
+  .content { padding: 32px; }
+
+  /* ── Pages ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Stats row ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* ── Tables ── */
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .table-header {
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .table-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+
+  th {
+    text-align: left;
+    padding: 12px 20px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+
+  td {
+    padding: 13px 20px;
+    font-size: 13.5px;
+    border-bottom: 1px solid rgba(46,42,37,0.6);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* ── Status badges ── */
+  .status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  .status-delivered  { background: rgba(46,125,94,0.2);  color: #4caf82; }
+  .status-shipped    { background: rgba(41,128,185,0.2); color: #5dade2; }
+  .status-processed  { background: rgba(201,168,76,0.2); color: var(--accent); }
+  .status-pending    { background: rgba(184,134,11,0.15); color: #d4ac0d; }
+  .status-active     { background: rgba(46,125,94,0.2);  color: #4caf82; }
+  .status-low        { background: rgba(192,57,43,0.2);  color: #e74c3c; }
+
+  /* ── Buttons ── */
+  .btn {
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-size: 12.5px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    font-weight: 500;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .btn-primary:hover { background: #d4b55c; }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-outline:hover { color: var(--text); border-color: var(--muted); }
+
+  /* ── Search bar ── */
+  .search-bar {
+    display: flex; gap: 10px; margin-bottom: 20px; align-items: center;
+  }
+
+  .search-input {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 14px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--muted); }
+
+  select.search-input { cursor: pointer; }
+
+  /* ── Product grid ── */
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .product-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+    transition: border-color 0.2s;
+  }
+
+  .product-card:hover { border-color: var(--accent2); }
+
+  .product-card .cat-tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .product-card h4 {
+    font-size: 13.5px;
+    font-weight: 500;
+    margin-bottom: 10px;
+    line-height: 1.4;
+  }
+
+  .product-card .price {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .product-card .stock {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .product-card .stock.low { color: #e74c3c; }
+
+  /* ── Alert box ── */
+  .alert {
+    background: rgba(192,57,43,0.12);
+    border: 1px solid rgba(192,57,43,0.3);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #e07060;
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  /* ── Two column layout ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+  /* ── ERD diagram placeholder ── */
+  .erd-container {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+  }
+
+  .erd-container h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px; margin-bottom: 20px;
+  }
+
+  .erd-tables {
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+
+  .erd-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    min-width: 160px;
+  }
+
+  .erd-table-header {
+    background: var(--accent2);
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 0.3px;
+  }
+
+  .erd-table-row {
+    padding: 5px 12px;
+    font-size: 11.5px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .erd-table-row:last-child { border-bottom: none; }
+  .erd-pk { color: var(--accent); font-size: 10px; font-weight: 700; }
+  .erd-fk { color: #5dade2; font-size: 10px; font-weight: 700; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── Fade in animation ── */
+  .page.active { animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <h1>Librairie Ifrane</h1>
+    <p>Management System</p>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" onclick="navigate('dashboard', this)">
+      <span class="nav-icon">▦</span> Dashboard
+    </div>
+
+    <div class="nav-section">Catalog</div>
+    <div class="nav-item" onclick="navigate('products', this)">
+      <span class="nav-icon">◧</span> Products
+    </div>
+    <div class="nav-item" onclick="navigate('categories', this)">
+      <span class="nav-icon">◈</span> Categories
+    </div>
+
+    <div class="nav-section">Operations</div>
+    <div class="nav-item" onclick="navigate('orders', this)">
+      <span class="nav-icon">◻</span> Orders
+    </div>
+    <div class="nav-item" onclick="navigate('customers', this)">
+      <span class="nav-icon">◯</span> Customers
+    </div>
+
+    <div class="nav-section">System</div>
+    <div class="nav-item" onclick="navigate('schema', this)">
+      <span class="nav-icon">◇</span> Database Schema
+    </div>
+    <div class="nav-item" onclick="navigate('notifications', this)">
+      <span class="nav-icon">◬</span> Notifications
+    </div>
+  </nav>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">Dashboard</div>
+    <div class="topbar-right">
+      <span style="font-size:12px;color:var(--muted)">Admin</span>
+      <span class="badge">ADMIN</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Products</div>
+          <div class="stat-value">18</div>
+          <div class="stat-sub">Across 5 categories</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Orders</div>
+          <div class="stat-value">6</div>
+          <div class="stat-sub">2 pending</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Revenue</div>
+          <div class="stat-value">970</div>
+          <div class="stat-sub">MAD — all orders</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Registered Users</div>
+          <div class="stat-value">6</div>
+          <div class="stat-sub">4 customers, 1 staff</div>
+        </div>
+      </div>
+
+      <div class="alert">
+        Low stock alert — 2 products are at or below their threshold: Watercolor Set (6 units), Calculus Textbook (8 units).
+      </div>
+
+      <div class="two-col">
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Recent Orders</h3>
+            <button class="btn btn-outline" onclick="navigate('orders', document.querySelector('[onclick*=orders]'))">View All</button>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Order ID</th><th>Customer</th><th>Amount</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>#6</td><td>Rita Jalal</td><td>215.00 MAD</td><td><span class="status status-pending">Pending</span></td></tr>
+              <tr><td>#5</td><td>Zaynab Aboulkacem</td><td>83.00 MAD</td><td><span class="status status-pending">Pending</span></td></tr>
+              <tr><td>#4</td><td>Youssef Benali</td><td>300.00 MAD</td><td><span class="status status-processed">Processed</span></td></tr>
+              <tr><td>#3</td><td>Tanishka Suwalka</td><td>57.00 MAD</td><td><span class="status status-shipped">Shipped</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Revenue by Category</h3>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Category</th><th>Revenue (MAD)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Books</td><td>610.00</td></tr>
+              <tr><td>Stationery</td><td>222.00</td></tr>
+              <tr><td>Notebooks & Journals</td><td>79.00</td></tr>
+              <tr><td>Art Supplies</td><td>95.00</td></tr>
+              <tr><td>Office Supplies</td><td>0.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="page" id="page-products">
+      <div class="search-bar">
+        <input class="search-input" type="text" placeholder="Search products..." oninput="filterProducts(this.value)">
+        <select class="search-input" style="max-width:160px" onchange="filterByCategory(this.value)">
+          <option value="">All Categories</option>
+          <option>Books</option>
+          <option>Stationery</option>
+          <option>Notebooks & Journals</option>
+          <option>Art Supplies</option>
+          <option>Office Supplies</option>
+        </select>
+        <button class="btn btn-primary">+ Add Product</button>
+      </div>
+      <div class="product-grid" id="product-grid">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div class="page" id="page-categories">
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Product Categories</h3>
+          <button class="btn btn-primary">+ Add Category</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Category Name</th><th>Products</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>Books</td><td>5</td></tr>
+            <tr><td>2</td><td>Stationery</td><td>5</td></tr>
+            <tr><td>3</td><td>Notebooks & Journals</td><td>3</td></tr>
+            <tr><td>4</td><td>Art Supplies</td><td>2</td></tr>
+            <tr><td>5</td><td>Office Supplies</td><td>3</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div class="page" id="page-orders">
+      <div class="search-bar">
+        <input class="search-input" type="text" placeholder="Search by customer or order ID...">
+        <select class="search-input" style="max-width:160px">
+          <option value="">All Statuses</option>
+          <option>Pending</option>
+          <option>Processed</option>
+          <option>Shipped</option>
+          <option>Delivered</option>
+        </select>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><h3>All Orders</h3></div>
+        <table>
+          <thead>
+            <tr><th>Order ID</th><th>Customer</th><th>Date</th><th>Amount</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>#1</td><td>Zaynab Aboulkacem</td><td>Nov 1, 2024</td><td>190.00 MAD</td><td><span class="status status-delivered">Delivered</span></td></tr>
+            <tr><td>#2</td><td>Rita Jalal</td><td>Nov 5, 2024</td><td>125.00 MAD</td><td><span class="status status-delivered">Delivered</span></td></tr>
+            <tr><td>#3</td><td>Tanishka Suwalka</td><td>Nov 10, 2024</td><td>57.00 MAD</td><td><span class="status status-shipped">Shipped</span></td></tr>
+            <tr><td>#4</td><td>Youssef Benali</td><td>Nov 15, 2024</td><td>300.00 MAD</td><td><span class="status status-processed">Processed</span></td></tr>
+            <tr><td>#5</td><td>Zaynab Aboulkacem</td><td>Nov 20, 2024</td><td>83.00 MAD</td><td><span class="status status-pending">Pending</span></td></tr>
+            <tr><td>#6</td><td>Rita Jalal</td><td>Nov 22, 2024</td><td>215.00 MAD</td><td><span class="status status-pending">Pending</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="page" id="page-customers">
+      <div class="table-card">
+        <div class="table-header"><h3>Registered Users</h3></div>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Registered</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>Admin Store</td><td>admin@bookstore.ma</td><td>Admin</td><td><span class="status status-active">Active</span></td><td>Jan 1, 2024</td></tr>
+            <tr><td>2</td><td>Zaynab Aboulkacem</td><td>zaynab@aui.ma</td><td>Customer</td><td><span class="status status-active">Active</span></td><td>Sep 1, 2024</td></tr>
+            <tr><td>3</td><td>Rita Jalal</td><td>rita@aui.ma</td><td>Customer</td><td><span class="status status-active">Active</span></td><td>Sep 3, 2024</td></tr>
+            <tr><td>4</td><td>Tanishka Suwalka</td><td>tanishka@aui.ma</td><td>Customer</td><td><span class="status status-active">Active</span></td><td>Sep 5, 2024</td></tr>
+            <tr><td>5</td><td>Youssef Benali</td><td>youssef@aui.ma</td><td>Customer</td><td><span class="status status-active">Active</span></td><td>Oct 10, 2024</td></tr>
+            <tr><td>6</td><td>Sara Moussaoui</td><td>sara@aui.ma</td><td>Staff</td><td><span class="status status-active">Active</span></td><td>Jan 15, 2024</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SCHEMA -->
+    <div class="page" id="page-schema">
+      <div class="erd-container">
+        <h3>Database Schema — Entity Relationship Overview</h3>
+        <div class="erd-tables">
+
+          <div class="erd-table">
+            <div class="erd-table-header">Users</div>
+            <div class="erd-table-row"><span class="erd-pk">PK</span> User_ID</div>
+            <div class="erd-table-row">User_FName</div>
+            <div class="erd-table-row">User_LName</div>
+            <div class="erd-table-row">Email</div>
+            <div class="erd-table-row">Role</div>
+            <div class="erd-table-row">Account_Status</div>
+            <div class="erd-table-row">Date_Registered</div>
+          </div>
+
+          <div class="erd-table">
+            <div class="erd-table-header">Categories</div>
+            <div class="erd-table-row"><span class="erd-pk">PK</span> Category_ID</div>
+            <div class="erd-table-row">Category_Name</div>
+          </div>
+
+          <div class="erd-table">
+            <div class="erd-table-header">Products</div>
+            <div class="erd-table-row"><span class="erd-pk">PK</span> Product_ID</div>
+            <div class="erd-table-row">Name</div>
+            <div class="erd-table-row">Price</div>
+            <div class="erd-table-row">Stock_Quantity</div>
+            <div class="erd-table-row">Low_Stock_Threshold</div>
+            <div class="erd-table-row"><span class="erd-fk">FK</span> Category_ID</div>
+          </div>
+
+          <div class="erd-table">
+            <div class="erd-table-header">Orders</div>
+            <div class="erd-table-row"><span class="erd-pk">PK</span> Order_ID</div>
+            <div class="erd-table-row">Order_Date</div>
+            <div class="erd-table-row">Total_Amount</div>
+            <div class="erd-table-row">Order_Status</div>
+            <div class="erd-table-row"><span class="erd-fk">FK</span> User_ID</div>
+          </div>
+
+          <div class="erd-table">
+            <div class="erd-table-header">OrderDetails</div>
+            <div class="erd-table-row"><span class="erd-pk">PK</span> Order_ID</div>
+            <div class="erd-table-row"><span class="erd-pk">PK</span> Product_ID</div>
+            <div class="erd-table-row">Quantity</div>
+            <div class="erd-table-row">Unit_Price</div>
+          </div>
+
+          <div class="erd-table">
+            <div class="erd-table-header">Notifications</div>
+            <div class="erd-table-row"><span class="erd-pk">PK</span> Notification_ID</div>
+            <div class="erd-table-row">Message</div>
+            <div class="erd-table-row">Status</div>
+            <div class="erd-table-row">Time_Stamp</div>
+            <div class="erd-table-row"><span class="erd-fk">FK</span> User_ID</div>
+          </div>
+
+          <div class="erd-table">
+            <div class="erd-table-header">AdminActions</div>
+            <div class="erd-table-row"><span class="erd-pk">PK</span> Action_ID</div>
+            <div class="erd-table-row">Action_Type</div>
+            <div class="erd-table-row">Details</div>
+            <div class="erd-table-row">Time_Stamp</div>
+            <div class="erd-table-row"><span class="erd-fk">FK</span> User_ID</div>
+            <div class="erd-table-row"><span class="erd-fk">FK</span> Product_ID</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="page" id="page-notifications">
+      <div class="table-card">
+        <div class="table-header"><h3>Notifications</h3></div>
+        <table>
+          <thead>
+            <tr><th>ID</th><th>User</th><th>Message</th><th>Time</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>7</td><td>Admin</td><td>Low stock alert: Watercolor Set has only 6 units.</td><td>Nov 22, 2024</td><td><span class="status status-low">Unread</span></td></tr>
+            <tr><td>6</td><td>Rita Jalal</td><td>Your order #6 has been placed successfully.</td><td>Nov 22, 2024</td><td><span class="status status-low">Unread</span></td></tr>
+            <tr><td>5</td><td>Zaynab Aboulkacem</td><td>Your order #5 has been placed successfully.</td><td>Nov 20, 2024</td><td><span class="status status-low">Unread</span></td></tr>
+            <tr><td>4</td><td>Rita Jalal</td><td>Your order #2 has been placed successfully.</td><td>Nov 5, 2024</td><td><span class="status status-delivered">Read</span></td></tr>
+            <tr><td>3</td><td>Zaynab Aboulkacem</td><td>Your order #1 has been delivered.</td><td>Nov 6, 2024</td><td><span class="status status-delivered">Read</span></td></tr>
+            <tr><td>2</td><td>Zaynab Aboulkacem</td><td>Your order #1 has been shipped.</td><td>Nov 3, 2024</td><td><span class="status status-delivered">Read</span></td></tr>
+            <tr><td>1</td><td>Zaynab Aboulkacem</td><td>Your order #1 has been placed successfully.</td><td>Nov 1, 2024</td><td><span class="status status-delivered">Read</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const products = [
+  { name: 'Introduction to Algorithms', category: 'Books',    price: 120, stock: 15, threshold: 3  },
+  { name: 'The Alchemist',              category: 'Books',    price: 55,  stock: 30, threshold: 5  },
+  { name: 'Atomic Habits',              category: 'Books',    price: 70,  stock: 20, threshold: 5  },
+  { name: 'Clean Code',                 category: 'Books',    price: 95,  stock: 10, threshold: 3  },
+  { name: 'Calculus: Early Transcendentals', category: 'Books', price: 150, stock: 8, threshold: 3 },
+  { name: 'Ballpoint Pens (Pack of 10)', category: 'Stationery', price: 12, stock: 80, threshold: 10 },
+  { name: 'Highlighters Set',           category: 'Stationery', price: 18, stock: 60, threshold: 10 },
+  { name: 'Ruler 30cm',                 category: 'Stationery', price: 5,  stock: 50, threshold: 10 },
+  { name: 'Scientific Calculator',      category: 'Stationery', price: 180, stock: 12, threshold: 3 },
+  { name: 'Sticky Notes Pack',          category: 'Stationery', price: 10, stock: 70, threshold: 15 },
+  { name: 'Spiral Notebook A4',         category: 'Notebooks & Journals', price: 22, stock: 45, threshold: 8 },
+  { name: 'Hardcover Journal',          category: 'Notebooks & Journals', price: 35, stock: 25, threshold: 5 },
+  { name: 'Composition Notebook',       category: 'Notebooks & Journals', price: 15, stock: 40, threshold: 8 },
+  { name: 'Watercolor Set',             category: 'Art Supplies', price: 95, stock: 6, threshold: 3 },
+  { name: 'Sketching Pencils Set',      category: 'Art Supplies', price: 45, stock: 20, threshold: 5 },
+  { name: 'Stapler',                    category: 'Office Supplies', price: 38, stock: 15, threshold: 4 },
+  { name: 'Paper Clips Box',            category: 'Office Supplies', price: 8,  stock: 90, threshold: 15 },
+  { name: 'File Folders Pack',          category: 'Office Supplies', price: 25, stock: 35, threshold: 10 },
+];
+
+let currentFilter = '';
+let currentCategory = '';
+
+function renderProducts(list) {
+  const grid = document.getElementById('product-grid');
+  grid.innerHTML = list.map(p => `
+    <div class="product-card">
+      <div class="cat-tag">${p.category}</div>
+      <h4>${p.name}</h4>
+      <div class="price">${p.price.toFixed(2)} MAD</div>
+      <div class="stock ${p.stock <= p.threshold ? 'low' : ''}">
+        ${p.stock <= p.threshold ? 'Low stock — ' : ''}${p.stock} units
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterProducts(val) {
+  currentFilter = val.toLowerCase();
+  applyFilters();
+}
+
+function filterByCategory(val) {
+  currentCategory = val;
+  applyFilters();
+}
+
+function applyFilters() {
+  const filtered = products.filter(p => {
+    const matchName = p.name.toLowerCase().includes(currentFilter);
+    const matchCat  = !currentCategory || p.category === currentCategory;
+    return matchName && matchCat;
+  });
+  renderProducts(filtered);
+}
+
+function navigate(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = {
+    dashboard: 'Dashboard', products: 'Products', categories: 'Categories',
+    orders: 'Orders', customers: 'Customers', schema: 'Database Schema',
+    notifications: 'Notifications'
+  };
+  document.getElementById('page-title').textContent = titles[page] || page;
+  if (page === 'products') renderProducts(products);
+}
+
+renderProducts(products);
+</script>
+</body>
+</html>
